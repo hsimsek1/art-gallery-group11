@@ -76,7 +76,7 @@ For macOS/Linux, use `python3.12 -m venv .venv` and replace `.\.venv\Scripts\pyt
 ## Run and log in
 
 ```powershell
-.\.venv\Scripts\python.exe -m flask --app src.backend run --host=127.0.0.1 --port=5000
+.\.venv\Scripts\python.exe -m flask --app src.backend run --host=127.0.0.1 --port=5678
 ```
 
 Open http://127.0.0.1:5000. Stop the server with Ctrl+C. Read your passwords in the local, ignored `local-credentials.txt`.
