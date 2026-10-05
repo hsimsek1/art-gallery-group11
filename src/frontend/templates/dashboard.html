@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <h1>Welcome, {{ current_user.username }}</h1>
+  <p>
+    Signed in as
+    <strong>
+      {% if current_user.role == 'guest' %}
+        User/Guest
+      {% elif current_user.role == 'employee' %}
+        Employee
+      {% else %}
+        Administrator
+      {% endif %}
+    </strong>.
+  </p>
+
+  <section class="card">
+    <h2>Gallery rooms</h2>
+    <p>Reference rooms loaded from the gallery database.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Capacity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for room in rooms %}
+          <tr>
+            <td>{{ room.name }}</td>
+            <td>{{ room.capacity }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

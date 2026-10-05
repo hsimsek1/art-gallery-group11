@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Secure Art Gallery{% endblock %} | Group 11</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <strong>Secure Art Gallery</strong>
+    <span>BIBIFI Group 11</span>
+  </header>
+
+  {% if current_user.is_authenticated %}
+    <nav aria-label="Main navigation">
+      <a href="{{ url_for('web.dashboard') }}">Dashboard</a>
+
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('web.admin') }}">Administrator page</a>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('web.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button>Log out</button>
+      </form>
+    </nav>
+  {% endif %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>Huseyin Simsek and Gustavo Pepe</footer>
+</body>
+</html>
