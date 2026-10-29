@@ -5,6 +5,7 @@
 }
 
 body {
+  margin-top: 0;
   padding-top: 0px auto;
 }
 
@@ -153,8 +154,4 @@ button:focus-visible{
 .login-page footer{
   text-align: center;
   border-top: none;
-}
-
-body{
-  margin-top: 0;
 }
