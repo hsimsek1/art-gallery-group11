@@ -6,7 +6,7 @@
   <title>{% block title %}Secure Art Gallery{% endblock %} | Group 11</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="{% block body_class %} {% endblock %}">
   <header>
     <strong>Secure Art Gallery</strong>
     <span>BIBIFI Group 11</span>

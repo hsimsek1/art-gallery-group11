@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
+{% block body_class %}login-page{% endblock %}
 
 {% block title %}Log in{% endblock %}
 
 {% block content %}
+  <div class="auth">
   <h1>Log in</h1>
   <p>Use your assigned gallery account.</p>
 
@@ -25,4 +27,5 @@
 
     <button>Log in</button>
   </form>
+  </div>
 {% endblock %}

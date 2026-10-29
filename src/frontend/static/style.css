@@ -5,9 +5,7 @@
 }
 
 body {
-  max-width: 850px;
-  margin: auto;
-  padding: 24px;
+  padding-top: 0px auto;
 }
 
 header, nav {
@@ -19,11 +17,18 @@ header, nav {
 }
 
 header {
-  border-bottom: 1px solid #cbd5dc;
+  background: white;
+  border-bottom: 1px solid #dce3e7;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: 32px;
 }
 
 header span, footer {
   color: #52616b;
+}
+
+html{
+  overflow: clip;
 }
 
 nav form {
@@ -87,4 +92,69 @@ th, td {
 footer {
   padding-top: 24px;
   font-size: .9rem;
+}
+
+input, button{
+  font:inherit;
+}
+
+input{
+  border: 1px solid #cbd5dc;
+  border-radius: 6px;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s; 
+}
+
+input:focus-visible{
+  outline: none;
+  border-color: #234d5e;
+  box-shadow: 0 0 0 3px rgba(35, 77, 94, .2);
+}
+
+input:-webkit-autofill{
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+}
+
+button{
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+button:hover{
+  background: #1b3d4a;
+}
+
+button:focus-visible{
+  outline: 3px solid rgba(35, 77, 94, .35);
+  outline-offset: 2px;
+}
+
+/*login page */
+
+.auth{
+  max-width: 400px;
+  margin: 24px auto 0;
+}
+
+.auth .card{
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.auth input{
+  max-width: none;
+}
+
+.auth button{
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.login-page footer{
+  text-align: center;
+  border-top: none;
+}
+
+body{
+  margin-top: 0;
 }
