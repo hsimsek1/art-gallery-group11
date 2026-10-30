@@ -1,8 +1,43 @@
 {% extends 'base.html' %}
-
 {% block title %}Administrator{% endblock %}
-
 {% block content %}
-  <h1>Administrator page</h1>
-  <p class="card">Access granted. Your account has the Administrator role.</p>
+<h1>Account administration</h1>
+<p>Administrator-only account creation and role changes. You cannot change your own role.</p>
+<section class="card"><h2>Add a person</h2>
+  <p>A person is someone whose gallery movements are tracked; a login account is optional.</p>
+  <form method="post" action="{{ url_for('web.create_person') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Name <input name="name" required maxlength="100"></label>
+    <label>Type <select name="kind"><option value="guest">Guest</option><option value="employee">Employee</option></select></label>
+    <button type="submit">Add person</button>
+  </form>
+</section>
+
+<section class="card"><h2>Accounts</h2><table>
+  <thead><tr><th>User</th><th>Role</th><th>Linked person</th><th>Change role</th></tr></thead><tbody>
+  {% for user in users %}<tr>
+    <td>{{ user.username }}</td><td>{{ user.role }}</td><td>{{ user.person_name or 'Not linked' }}</td>
+    <td>{% if user.id != current_user.id %}
+      <form method="post" action="{{ url_for('web.change_role', user_id=user.id) }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select name="role" aria-label="New role for {{ user.username }}">
+          {% for role in ('guest', 'employee', 'admin') %}
+            <option value="{{ role }}" {% if role == user.role %}selected{% endif %}>{{ role }}</option>
+          {% endfor %}
+        </select><button type="submit">Save</button>
+      </form>{% else %}Your account{% endif %}</td>
+  </tr>{% endfor %}</tbody></table></section>
+<section class="card"><h2>Create account</h2>
+  <form method="post" action="{{ url_for('web.create_user') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username<input name="username" required maxlength="40" pattern="[A-Za-z0-9_]+"></label>
+    <label>New password (12–128 characters)<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
+    <label>Role <select name="role"><option value="guest">guest</option><option value="employee">employee</option><option value="admin">admin</option></select></label>
+    <label>Person linked to this account (optional; one account per person)<select name="person_id">
+       <option value="">None</option>
+       {% for person in people %}<option value="{{ person.id }}">{{ person.name }}</option>{% endfor %}
+    </select></label>
+    <button type="submit">Create account</button>
+  </form>
+</section>
 {% endblock %}

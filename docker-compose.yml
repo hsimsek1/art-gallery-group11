@@ -1,0 +1,8 @@
+services:
+  gallery:
+    build: .
+    ports:
+      - '127.0.0.1:5678:8000'
+    volumes:
+      - ./instance:/app/instance
+    restart: unless-stopped

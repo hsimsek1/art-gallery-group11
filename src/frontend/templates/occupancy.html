@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Occupancy{% endblock %}
+{% block content %}
+<h1>Current occupancy</h1>
+<p>Currently inside the gallery: <strong>{{ gallery_count }}</strong></p>
+<section class="card"><table>
+  <thead><tr><th>Room</th><th>People inside</th><th>Capacity</th></tr></thead><tbody>
+  {% for room in rooms %}<tr><td>{{ room.name }}</td><td>{{ room.occupancy }}</td><td>{{ room.capacity }}</td></tr>{% endfor %}
+  </tbody></table></section>
+{% if current_user.role in ('employee', 'admin') %}
+<section class="card"><h2>People in the gallery</h2>
+{% if people %}<table><thead><tr><th>Name</th><th>Location</th></tr></thead><tbody>
+{% for person in people %}<tr><td>{{ person.name }}</td><td>{{ person.place }}</td></tr>{% endfor %}
+</tbody></table>{% else %}<p>Nobody is currently inside.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}
