@@ -1,6 +1,6 @@
 # Week 10 Break It Report — TEMPLATE (no verified breaks yet)
 
-**Attack team:** Group 11 (Huseyin Simsek and Gustavo Pepe)  
+**Attack team:** Group 12
 **Assigned defender / anonymized code ID:** [await assignment]  
 **Authorized target / commit SHA:** [await exchange]  
 **Provided official test harness and oracle:** [await course files]  
