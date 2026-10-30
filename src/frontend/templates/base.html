@@ -3,31 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Secure Art Gallery{% endblock %} | Group 11</title>
+  <title>{% block title %}Gallery Desk{% endblock %} | Group 11</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <header><strong>Secure Art Gallery</strong><span>BIBIFI Group 11</span></header>
+  <header class="site-header">
+    <div>
+      <a class="brand" href="{{ url_for('web.dashboard') if current_user.is_authenticated else url_for('web.login') }}">Gallery Desk</a>
+      <span class="brand-caption">Group 11 · Secure Art Gallery</span>
+    </div>
+    {% if current_user.is_authenticated %}
+      <span class="user-label">{{ current_user.username }} · {{ current_user.role }}</span>
+    {% endif %}
+  </header>
   {% if current_user.is_authenticated %}
-  <nav aria-label="Main navigation">
-    <a href="{{ url_for('web.dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('web.occupancy') }}">Occupancy</a>
-    <a href="{{ url_for('web.history') }}">History</a>
-    {% if current_user.role in ('employee', 'admin') %}<a href="{{ url_for('web.persons') }}">Persons</a>{% endif %}
-    {% if current_user.role in ('employee', 'admin') %}
-      <a href="{{ url_for('web.events') }}">Record movement</a>
-    {% endif %}
-    {% if current_user.role == 'admin' %}
-      <a href="{{ url_for('web.admin') }}">Admin</a>
-      <a href="{{ url_for('web.admin_audit') }}">Audit log</a>
-    {% endif %}
-    <form method="post" action="{{ url_for('web.logout') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit">Log out</button>
-    </form>
-  </nav>
+    <nav aria-label="Gallery tools" class="navigation">
+      <a href="{{ url_for('web.dashboard') }}" {% if request.endpoint == 'web.dashboard' %}aria-current="page"{% endif %}>Overview</a>
+      <a href="{{ url_for('web.occupancy') }}" {% if request.endpoint == 'web.occupancy' %}aria-current="page"{% endif %}>Where people are</a>
+      <a href="{{ url_for('web.history') }}" {% if request.endpoint == 'web.history' %}aria-current="page"{% endif %}>Visit history</a>
+      {% if current_user.role in ('employee', 'admin') %}
+        <a href="{{ url_for('web.events') }}" {% if request.endpoint == 'web.events' %}aria-current="page"{% endif %}>Check-in desk</a>
+        <a href="{{ url_for('web.persons') }}" {% if request.endpoint == 'web.persons' %}aria-current="page"{% endif %}>People</a>
+      {% endif %}
+      {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('web.admin') }}" {% if request.endpoint == 'web.admin' %}aria-current="page"{% endif %}>Manage accounts</a>
+        <a href="{{ url_for('web.admin_audit') }}" {% if request.endpoint == 'web.admin_audit' %}aria-current="page"{% endif %}>Security log</a>
+      {% endif %}
+      <form class="logout-form" method="post" action="{{ url_for('web.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="button-outline">Sign out</button>
+      </form>
+    </nav>
   {% endif %}
   <main>{% block content %}{% endblock %}</main>
-  <footer>Huseyin Simsek and Gustavo Pepe · Secure Programming · Fall 2026</footer>
+  <footer>Gallery Desk · Secure Programming · Kent State University · Fall 2026</footer>
 </body>
 </html>
