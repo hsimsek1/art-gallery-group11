@@ -1,23 +1,37 @@
 {% extends 'base.html' %}
-{% block title %}Record movement{% endblock %}
+{% block title %}Check-in desk{% endblock %}
 {% block content %}
-<h1>Record a gallery movement</h1>
-<p>Employees and administrators only. Room is required only for room movements. Invalid moves are rejected with 409.</p>
-<form method="post" class="card">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <label>Person <select name="person_id" required>
-    {% for person in people %}<option value="{{ person.id }}">{{ person.name }}</option>{% endfor %}
-  </select></label>
-  <label>Movement <select name="event_type" required>
-    <option value="gallery_enter">Enter gallery</option>
-    <option value="room_enter">Enter room</option>
-    <option value="room_leave">Leave room</option>
-    <option value="gallery_leave">Leave gallery</option>
-  </select></label>
-  <label>Room (choose only for room entry/exit) <select name="room_id">
-    <option value="">Not applicable</option>
-    {% for room in rooms %}<option value="{{ room.id }}">{{ room.name }}</option>{% endfor %}
-  </select></label>
-  <button type="submit">Record event</button>
-</form>
+<p class="eyebrow">STAFF OPERATIONS</p>
+<h1>Check-in desk</h1>
+<p class="muted">Record one movement at a time. A guest must enter the gallery before entering a room, and leave the room before leaving the building.</p>
+<div class="two-column">
+  <form method="post" class="card">
+    <h2>New movement</h2>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Who moved?<select name="person_id" required>
+      {% for person in people %}<option value="{{ person.id }}">{{ person.name }}</option>{% endfor %}
+    </select></label>
+    <label>What happened?<select name="event_type" required>
+      <option value="gallery_enter">Entered the gallery</option>
+      <option value="room_enter">Entered a room</option>
+      <option value="room_leave">Left a room</option>
+      <option value="gallery_leave">Left the gallery</option>
+    </select></label>
+    <label>Room (only for room movements)<select name="room_id">
+      <option value="">No room</option>
+      {% for room in rooms %}<option value="{{ room.id }}">{{ room.name }}</option>{% endfor %}
+    </select></label>
+    <button type="submit">Save movement</button>
+  </form>
+  <aside class="card help-panel">
+    <h2>Recording checklist</h2>
+    <ol>
+      <li>Choose the person from the list.</li>
+      <li>Choose their entry or exit action.</li>
+      <li>Select a room only for room entry or exit.</li>
+      <li>Save, then check the movement in visit history.</li>
+    </ol>
+    <p class="muted">Invalid transitions and full rooms are rejected. They do not change occupancy.</p>
+  </aside>
+</div>
 {% endblock %}
