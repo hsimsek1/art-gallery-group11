@@ -1,32 +1,38 @@
 {% extends 'base.html' %}
-{% block title %}History{% endblock %}
+{% block title %}Visit history{% endblock %}
 {% block content %}
-<h1>Gallery event history</h1>
-<p>{% if current_user.role == 'guest' %}Only the history linked to your account is shown.{% else %}Filter the event history by person, room, or movement type.{% endif %}</p>
-<form class="card" method="get" action="{{ url_for('web.history') }}">
-  {% if current_user.role != 'guest' %}
-  <label>Person <select name="person_id"><option value="">All people</option>
-  {% for person in people %}<option value="{{ person.id }}" {% if person_id == person.id %}selected{% endif %}>{{ person.name }}</option>{% endfor %}
-  </select></label>
-  {% endif %}
-  <label>Room <select name="room_id"><option value="">All rooms</option>
-  {% for room in rooms %}<option value="{{ room.id }}" {% if room_id == room.id %}selected{% endif %}>{{ room.name }}</option>{% endfor %}
-  </select></label>
-  <label>Event type <select name="event_type">
-    <option value="">All event types</option>
-    {% for kind in ('gallery_enter', 'room_enter', 'room_leave', 'gallery_leave') %}
-    <option value="{{ kind }}" {% if event_type == kind %}selected{% endif %}>{{ kind }}</option>
-    {% endfor %}
-  </select></label>
-  <button type="submit">Apply filters</button>
+<p class="eyebrow">EVENT LEDGER</p>
+<h1>Visit history</h1>
+<p class="muted">{% if current_user.role == 'guest' %}This page shows visits linked to your account only.{% else %}Use the filters to narrow the record of accepted movements.{% endif %}</p>
+<form class="card filter-form" method="get" action="{{ url_for('web.history') }}">
+  <h2>Find events</h2>
+  <div class="filter-grid">
+    {% if current_user.role != 'guest' %}
+    <label>Person<select name="person_id"><option value="">Everyone</option>
+    {% for person in people %}<option value="{{ person.id }}" {% if person_id == person.id %}selected{% endif %}>{{ person.name }}</option>{% endfor %}
+    </select></label>
+    {% endif %}
+    <label>Room<select name="room_id"><option value="">Every room</option>
+    {% for room in rooms %}<option value="{{ room.id }}" {% if room_id == room.id %}selected{% endif %}>{{ room.name }}</option>{% endfor %}
+    </select></label>
+    <label>Movement<select name="event_type">
+      <option value="">Any movement</option>
+      {% for kind in ('gallery_enter', 'room_enter', 'room_leave', 'gallery_leave') %}
+      <option value="{{ kind }}" {% if event_type == kind %}selected{% endif %}>{{ kind.replace('_', ' ')|title }}</option>
+      {% endfor %}
+    </select></label>
+  </div>
+  <button type="submit">Search the ledger</button>
 </form>
-<section class="card"><table>
-<thead><tr><th>Time (UTC)</th><th>Person</th><th>Event</th><th>Room</th><th>Recorded by</th></tr></thead>
-<tbody>{% for event in events %}<tr>
-  <td>{{ event.timestamp }}</td><td>{{ event.person_name }}</td>
-  <td>{{ event.event_type }}</td><td>{{ event.room_name or '—' }}</td>
-  <td>{{ event.recorded_by }}</td>
-</tr>{% else %}<tr><td colspan="5">No matching events on this page.</td></tr>{% endfor %}</tbody></table></section>
+<section class="card">
+  <h2>Recorded movements</h2>
+  <table><thead><tr><th>Recorded (UTC)</th><th>Person</th><th>Movement</th><th>Room</th><th>Staff member</th></tr></thead>
+  <tbody>{% for event in events %}<tr>
+    <td>{{ event.timestamp }}</td><td>{{ event.person_name }}</td>
+    <td>{{ event.event_type.replace('_', ' ')|title }}</td><td>{{ event.room_name or '—' }}</td>
+    <td>{{ event.recorded_by }}</td>
+  </tr>{% else %}<tr><td colspan="5">No movements match these filters.</td></tr>{% endfor %}</tbody></table>
+</section>
 <div class="pager">
 {% if page > 1 %}<a href="{{ url_for('web.history', page=page-1, size=size, person_id=person_id, room_id=room_id, event_type=event_type) }}">Previous</a>{% endif %}
 <span>Page {{ page }}</span>
