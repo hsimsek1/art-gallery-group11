@@ -1,17 +1,24 @@
 {% extends 'base.html' %}
-{% block title %}Occupancy{% endblock %}
+{% block title %}Where people are{% endblock %}
 {% block content %}
-<h1>Current occupancy</h1>
-<p>Currently inside the gallery: <strong>{{ gallery_count }}</strong></p>
-<section class="card"><table>
-  <thead><tr><th>Room</th><th>People inside</th><th>Capacity</th></tr></thead><tbody>
-  {% for room in rooms %}<tr><td>{{ room.name }}</td><td>{{ room.occupancy }}</td><td>{{ room.capacity }}</td></tr>{% endfor %}
-  </tbody></table></section>
+<p class="eyebrow">LIVE LOCATION BOARD</p>
+<h1>Where people are</h1>
+<p class="muted">Currently inside the gallery: <strong>{{ gallery_count }}</strong>. People on the gallery floor are counted even if they are not in a room.</p>
+<section class="card">
+  <h2>Rooms</h2>
+  <table><thead><tr><th>Room</th><th>Present</th><th>Maximum</th><th>Status</th></tr></thead><tbody>
+  {% for room in rooms %}<tr>
+    <td>{{ room.name }}</td><td>{{ room.occupancy }}</td><td>{{ room.capacity }}</td>
+    <td>{% if room.occupancy >= room.capacity %}<span class="status-full">Full</span>{% else %}<span class="status-open">Open</span>{% endif %}</td>
+  </tr>{% endfor %}</tbody></table>
+</section>
 {% if current_user.role in ('employee', 'admin') %}
-<section class="card"><h2>People in the gallery</h2>
-{% if people %}<table><thead><tr><th>Name</th><th>Location</th></tr></thead><tbody>
+<section class="card"><h2>Who's checked in?</h2>
+{% if people %}
+<table><thead><tr><th>Person</th><th>Last recorded location</th></tr></thead><tbody>
 {% for person in people %}<tr><td>{{ person.name }}</td><td>{{ person.place }}</td></tr>{% endfor %}
-</tbody></table>{% else %}<p>Nobody is currently inside.</p>{% endif %}
+</tbody></table>
+{% else %}<p>There are no active visits right now.</p>{% endif %}
 </section>
 {% endif %}
 {% endblock %}
