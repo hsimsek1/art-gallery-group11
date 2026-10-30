@@ -67,7 +67,6 @@ def login():
     password = request.form.get('password', '')
     db = get_db()
     ip = request.remote_addr or 'unknown'
-    # Shared database rate limit works across workers; ignore spoofable forwarded-IP headers.
     ip_failures = db.execute(
         "SELECT COUNT(*) FROM login_failures WHERE ip = ? "
         "AND attempted_at > datetime('now', '-15 minutes')",
@@ -171,7 +170,6 @@ def events():
         room_id = None
 
     target = f'person:{person_id};event:{kind};room:{room_id}'
-    # SQLite writer lock makes validation+insert indivisible across concurrent workers.
     db.execute('BEGIN IMMEDIATE')
     person = db.execute('SELECT id FROM persons WHERE id = ?', (person_id,)).fetchone()
     room = (db.execute('SELECT id, capacity FROM rooms WHERE id = ?', (room_id,)).fetchone()
@@ -220,7 +218,6 @@ def history():
         if person_id is not None and person_id != current_user.person_id:
             abort(403)
         person_id = current_user.person_id
-        # An unlinked guest can never view anyone else's history.
         if person_id is None:
             return render_template('history.html', events=[], page=page, size=size,
                                    has_next=False, person_id=None,
@@ -232,7 +229,6 @@ def history():
                JOIN persons p ON p.id = e.person_id
                LEFT JOIN rooms r ON r.id = e.room_id
                JOIN users u ON u.id = e.recorded_by"""
-    # Only literal, application-controlled SQL fragments; never build SQL from form text.
     filters, values = [], []
     if person_id is not None:
         filters.append('e.person_id = ?')
@@ -322,7 +318,7 @@ def change_role(user_id):
     if role not in ROLES:
         abort(400)
     if user_id == current_user.id:
-        abort(403)  # An administrator may not change their own role.
+        abort(403) 
     db = get_db()
     target = db.execute('SELECT id, role FROM users WHERE id = ?', (user_id,)).fetchone()
     if target is None:
