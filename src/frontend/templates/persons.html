@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Persons{% endblock %}
+{% block content %}
+<h1>People tracked by the gallery</h1>
+<p>Employees and administrators can view registered persons. An administrator can add people from the Admin page.</p>
+<section class="card"><table>
+  <thead><tr><th>ID</th><th>Name</th><th>Type</th></tr></thead>
+  <tbody>{% for person in people %}<tr>
+    <td>{{ person.id }}</td><td>{{ person.name }}</td><td>{{ person.kind }}</td>
+  </tr>{% else %}<tr><td colspan="3">No people registered.</td></tr>{% endfor %}</tbody>
+</table></section>
+{% endblock %}

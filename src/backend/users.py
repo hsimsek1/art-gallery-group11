@@ -1,7 +1,9 @@
 from flask_login import UserMixin
 
+
 class User(UserMixin):
-    def __init__(self, database_row):
-        self.id = database_row["id"]
-        self.username = database_row["username"]
-        self.role = database_row["role"]
+    def __init__(self, row):
+        self.id = row['id']
+        self.username = row['username']
+        self.role = row['role']
+        self.person_id = row['person_id']

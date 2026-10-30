@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<h1>Audit log</h1>
+<section class="card"><table>
+<thead><tr><th>Time (UTC)</th><th>Actor</th><th>Action</th><th>Target</th><th>Outcome</th><th>IP</th></tr></thead><tbody>
+{% for entry in entries %}<tr>
+<td>{{ entry.timestamp }}</td><td>{{ entry.actor or 'Unknown' }}</td><td>{{ entry.action }}</td>
+<td>{{ entry.target or '—' }}</td><td>{{ entry.outcome }}</td><td>{{ entry.ip or '—' }}</td>
+</tr>{% else %}<tr><td colspan="6">No audit records found.</td></tr>{% endfor %}
+</tbody></table></section>
+<div class="pager">{% if page > 1 %}<a href="{{ url_for('web.admin_audit', page=page-1, size=size) }}">Previous</a>{% endif %}
+<span>Page {{ page }}</span>{% if has_next %}<a href="{{ url_for('web.admin_audit', page=page+1, size=size) }}">Next</a>{% endif %}</div>
+{% endblock %}
