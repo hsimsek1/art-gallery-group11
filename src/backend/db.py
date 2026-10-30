@@ -36,7 +36,7 @@ def init_schema():
     from pathlib import Path
     root = Path(__file__).resolve().parents[2]
     db = get_db()
-    # Existing Week 6 databases have no user.person_id or audit metadata.
+
     for table, columns in {
         'users': {'person_id': 'INTEGER REFERENCES persons(id)'},
         'audit_logs': {
@@ -52,7 +52,6 @@ def init_schema():
                     db.execute(f'ALTER TABLE {table} ADD COLUMN {column} {definition}')
     db.commit()
     db.executescript((root / 'database/schema.sql').read_text(encoding='utf-8'))
-    # ALTER TABLE cannot add UNIQUE; enforce the relationship for upgraded Week 6 DBs.
     db.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_person_id ON users(person_id)')
     db.commit()
 
