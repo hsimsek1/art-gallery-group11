@@ -32,7 +32,7 @@ def create_app(test_config=None):
         DATABASE=str(instance / 'week6.db'),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
-        SESSION_COOKIE_SECURE=False,  # Enable in HTTPS deployment configuration.
+        SESSION_COOKIE_SECURE=False, 
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
         MAX_CONTENT_LENGTH=16 * 1024,
         DEBUG=False,
@@ -50,7 +50,6 @@ def create_app(test_config=None):
 
     @app.before_request
     def default_deny_unauthenticated():
-        # Public allow-list: routes newly added in the future are private by default.
         if request.endpoint in ('web.index', 'web.login', 'static', None):
             return None
         if not current_user.is_authenticated:
@@ -121,14 +120,12 @@ def create_app(test_config=None):
                 if not (12 <= len(password) <= 128):
                     raise click.ClickException('Run tools/setup_local.py before seeding.')
                 person_id = {'guest': 1, 'employee': 2, 'admin': None}[role]
-                # Reused IDs from old DB may already be linked to other users.
                 if person_id and db.execute('SELECT id FROM users WHERE person_id = ?', (person_id,)).fetchone():
                     person_id = None
                 db.execute(
                     'INSERT INTO users (username, password_hash, role, person_id) VALUES (?, ?, ?, ?)',
                     (username, generate_password_hash(password, method='scrypt'), role, person_id),
                 )
-            # Backfill the Week 6 demo guest/employee linkage without overwriting other links.
             for name, person_id in [('guest11', 1), ('employee11', 2)]:
                 if not db.execute('SELECT id FROM users WHERE person_id = ?', (person_id,)).fetchone():
                     db.execute('UPDATE users SET person_id = ? WHERE username = ? AND person_id IS NULL',
