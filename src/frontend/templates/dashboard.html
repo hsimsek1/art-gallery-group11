@@ -1,16 +1,31 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Overview{% endblock %}
 {% block content %}
-<h1>Gallery dashboard</h1>
-<p>Signed in as <strong>{{ current_user.username }}</strong> ({{ current_user.role }}).</p>
+<div class="page-heading">
+  <div><p class="eyebrow">LIVE GALLERY STATUS</p><h1>Gallery overview</h1></div>
+  {% if current_user.role in ('employee', 'admin') %}<a class="button-link" href="{{ url_for('web.events') }}">Record a visit</a>{% endif %}
+</div>
+<section class="summary-row" aria-label="Gallery totals">
+  <div class="stat"><span>People in gallery</span><strong>Current occupancy: {{ gallery_count }}</strong></div>
+  <div class="stat"><span>On the gallery floor</span><strong>{{ floor_count }}</strong></div>
+  <div class="stat"><span>Rooms at capacity</span><strong>{{ rooms_full }}</strong></div>
+</section>
 <section class="card">
-  <h2>Current occupancy: {{ gallery_count }}</h2>
-  <p>Room capacity and current attendance, derived from recorded events.</p>
-  <table><thead><tr><th>Room</th><th>Occupancy</th><th>Capacity</th></tr></thead><tbody>
+  <h2>Room availability</h2>
+  <p class="muted">Numbers come from accepted entry and exit events, not a manually edited counter.</p>
+  <table><thead><tr><th>Room</th><th>Inside</th><th>Limit</th><th>Availability</th></tr></thead><tbody>
   {% for room in rooms %}
-    <tr><td>{{ room.name }}</td><td>{{ room.occupancy }}</td><td>{{ room.capacity }}</td></tr>
+    <tr><td>{{ room.name }}</td><td>{{ room.occupancy }}</td><td>{{ room.capacity }}</td>
+    <td>{% if room.occupancy >= room.capacity %}<span class="status-full">Full</span>{% else %}<span class="status-open">Space available</span>{% endif %}</td></tr>
   {% endfor %}
   </tbody></table>
 </section>
-<p>Guests can review their linked history; employees and administrators can record movements.</p>
+<section class="card help-panel">
+  <h2>What would you like to do?</h2>
+  {% if current_user.role in ('employee', 'admin') %}
+  <p>Staff can record entry or exit at the <a href="{{ url_for('web.events') }}">check-in desk</a>, then verify the result in <a href="{{ url_for('web.history') }}">visit history</a>.</p>
+  {% else %}
+  <p>Your account can view current room counts and <a href="{{ url_for('web.history') }}">your own visit history</a>. Only staff can record movements.</p>
+  {% endif %}
+</section>
 {% endblock %}
