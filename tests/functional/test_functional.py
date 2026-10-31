@@ -15,7 +15,7 @@ def test_seed_and_init_idempotent(app):
 def test_login_and_roles(client):
     assert client.get('/dashboard').status_code == 302
     assert login(client).status_code == 302
-    assert b'Gallery dashboard' in client.get('/dashboard').data
+    assert b'Gallery overview' in client.get('/dashboard').data
     assert client.get('/admin').status_code == 403
     assert client.post('/logout').status_code == 302
     assert client.get('/dashboard').status_code == 302
@@ -109,3 +109,16 @@ def test_person_management_and_history_queries(client, app):
     assert b'<td>New Visitor</td>' not in client.get('/history?room_id=1&event_type=room_enter').data
     assert client.get('/history?event_type=unknown').status_code == 400
     assert client.get('/history?room_id=2%20OR%201=1').status_code == 400
+
+
+def test_overview_distinguishes_gallery_floor_from_rooms(client):
+    # A visitor on the gallery floor counts towards gallery attendance,
+    # but does not count towards the occupancy of either room.
+    login(client)
+    movement(client, 'gallery_enter', person_id=1)
+    dashboard = client.get('/dashboard').data
+    assert b'Current occupancy: 1' in dashboard
+    assert b'On the gallery floor' in dashboard
+    assert b'<strong>1</strong>' in dashboard
+    assert b'Rooms at capacity' in dashboard
+    assert b'<span class="status-open">Space available</span>' in dashboard

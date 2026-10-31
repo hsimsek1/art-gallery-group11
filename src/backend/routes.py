@@ -126,7 +126,9 @@ def logout():
 def dashboard():
     loc, rooms = locations_summary()
     return render_template('dashboard.html', rooms=rooms,
-                           gallery_count=sum(spot != -1 for spot in loc.values()))
+                           gallery_count=sum(spot != -1 for spot in loc.values()),
+                           floor_count=sum(spot == 0 for spot in loc.values()),
+                           rooms_full=sum(room['occupancy'] >= room['capacity'] for room in rooms))
 
 
 @web.get('/occupancy')
@@ -325,7 +327,7 @@ def change_role(user_id):
     if role not in ROLES:
         abort(400)
     if user_id == current_user.id:
-        abort(403) 
+        abort(403)  
     db = get_db()
     db.execute('BEGIN IMMEDIATE')
     actor = db.execute('SELECT role FROM users WHERE id = ?', (current_user.id,)).fetchone()

@@ -33,6 +33,7 @@ def init_schema():
     from pathlib import Path
     root = Path(__file__).resolve().parents[2]
     db = get_db()
+
     for table, columns in {
         'users': {
             'person_id': 'INTEGER REFERENCES persons(id)',
