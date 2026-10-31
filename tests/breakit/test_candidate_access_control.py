@@ -1,12 +1,9 @@
-"""ILLUSTRATIVE candidate for the assigned peer app, not a confirmed break.
-
-Configure only after reading the official anonymized target API and approved harness.
+""" 
 Run: BREAKIT_BASE_URL=http://127.0.0.1:5678 BREAKIT_PROBE_PATH=/admin \
      BREAKIT_EXPECTED_STATUS=403 python -m unittest tests.breakit.test_candidate_access_control
 
-This example checks an unauthenticated request. Depending on the target's auth
+Check an unauthenticated request. Depending on the target's auth
 contract, the expected status may be 302 (redirect) or 401 rather than 403.
-Replace its setup/request/expectations with an actual authorized failing case.
 """
 import os
 import unittest

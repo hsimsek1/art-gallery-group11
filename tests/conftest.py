@@ -1,4 +1,3 @@
-"""Test app uses a temporary SQLite file and never touches private local credentials."""
 import pytest
 from werkzeug.security import generate_password_hash
 from src.backend import create_app

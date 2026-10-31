@@ -1,4 +1,3 @@
-"""Secure Art Gallery application factory (Weeks 7-9 Build It)."""
 from datetime import timedelta
 from pathlib import Path
 
@@ -57,13 +56,16 @@ def create_app(test_config=None):
         return None
 
     @login_manager.user_loader
-    def load_user(user_id):
-        try:
-            user_id = int(user_id)
-        except (TypeError, ValueError):
+    def load_user(session_id):
+        user_id, _, version = str(session_id).partition(':')
+        if not user_id.isascii() or not user_id.isdigit() or not version.isascii() or not version.isdigit():
             return None
-        row = get_db().execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-        return User(row) if row is not None else None
+        if len(user_id) > 9 or len(version) > 9:
+            return None
+        row = get_db().execute('SELECT * FROM users WHERE id = ?', (int(user_id),)).fetchone()
+        if row is None or row['session_version'] != int(version):
+            return None
+        return User(row)
 
     @app.after_request
     def harden_headers(response):

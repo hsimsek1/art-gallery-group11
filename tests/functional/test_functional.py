@@ -53,7 +53,6 @@ def test_guest_history_only_their_person(client):
 
 def test_admin_can_create_and_change_role(client, app):
     login(client, 'admin11')
-    # Admin forms must appear in the page body, not inside the HTML title.
     admin_page = client.get('/admin').data
     assert b'action="/admin/persons"' in admin_page.split(b'</head>')[1]
     resp = client.post('/admin/users', data={'username':'viewer','password':'secureDemoPassword123!',
