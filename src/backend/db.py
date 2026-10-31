@@ -1,4 +1,3 @@
-"""Small SQLite helpers. All SQL values are bound with ? placeholders."""
 import sqlite3
 from flask import current_app, g, request
 
@@ -20,7 +19,6 @@ def close_db(error=None):
 
 
 def audit(action, user_id=None, target=None, outcome='accepted', commit=True):
-    """Caller may set commit=False when logging inside an existing transaction."""
     db = get_db()
     db.execute(
         'INSERT INTO audit_logs (user_id, action, timestamp, target, outcome, ip) '
@@ -32,13 +30,15 @@ def audit(action, user_id=None, target=None, outcome='accepted', commit=True):
 
 
 def init_schema():
-    """Create the new tables and upgrade a Week 6 DB without deleting its data."""
     from pathlib import Path
     root = Path(__file__).resolve().parents[2]
     db = get_db()
 
     for table, columns in {
-        'users': {'person_id': 'INTEGER REFERENCES persons(id)'},
+        'users': {
+            'person_id': 'INTEGER REFERENCES persons(id)',
+            'session_version': 'INTEGER NOT NULL DEFAULT 0',
+        },
         'audit_logs': {
             'target': 'TEXT',
             'outcome': "TEXT NOT NULL DEFAULT 'accepted'",
@@ -57,11 +57,6 @@ def init_schema():
 
 
 def current_locations():
-    """Return {person_id: room_id|0|-1} based on accepted event ordering.
-
-    -1 means outside; 0 means inside gallery but not inside a room.
-    No cached state table can drift from the event history.
-    """
     latest = get_db().execute('''
         SELECT e.person_id, e.room_id, e.event_type
         FROM gallery_events e

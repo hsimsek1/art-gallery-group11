@@ -88,7 +88,6 @@ def test_csrf_on_state_changes(app):
 
 
 def test_concurrent_duplicate_movements_only_one_accepted(app):
-    """Different sessions race on the same person; BEGIN IMMEDIATE serializes writers."""
     def send_one(_):
         with app.test_client() as client:
             login(client)
@@ -141,3 +140,115 @@ def test_user_entered_person_name_escaped(client):
     response = client.get('/persons')
     assert b'<img src=x onerror=alert(1)>' not in response.data
     assert b'&lt;img' in response.data
+
+
+def test_session_cookie_rejected_after_logout(app):
+    victim = app.test_client()
+    login(victim, 'admin11')
+    stolen = victim.get_cookie('session').value
+    assert victim.get('/admin').status_code == 200
+    victim.post('/logout')
+
+    attacker = app.test_client()
+    attacker.set_cookie('session', stolen)
+    response = attacker.get('/admin')
+    assert response.status_code == 302
+    assert '/login' in response.headers['Location']
+
+
+def test_role_change_revokes_target_sessions(app):
+    employee = app.test_client()
+    login(employee, 'employee11')
+    assert employee.get('/events').status_code == 200
+
+    admin = app.test_client()
+    login(admin, 'admin11')
+    with app.app_context():
+        employee_id = get_db().execute("SELECT id FROM users WHERE username='employee11'").fetchone()[0]
+    assert admin.post(f'/admin/users/{employee_id}/role', data={'role': 'guest'}).status_code == 302
+
+    assert employee.get('/events').status_code == 302
+
+
+def test_unknown_username_still_checks_a_password_hash(client, monkeypatch):
+    from src.backend import routes
+    calls = []
+    real_check = routes.check_password_hash
+
+    def counting_check(stored_hash, password):
+        calls.append(stored_hash)
+        return real_check(stored_hash, password)
+
+    monkeypatch.setattr(routes, 'check_password_hash', counting_check)
+    assert client.post('/login', data={'username': 'nobody', 'password': 'wrong-password'}).status_code == 401
+    assert client.post('/login', data={'username': 'employee11', 'password': 'wrong-password'}).status_code == 401
+    assert len(calls) == 2
+    assert calls[0] == routes.DUMMY_PASSWORD_HASH
+
+
+def test_failed_logins_from_one_address_do_not_lock_out_the_owner(app):
+    attacker = app.test_client()
+    for _ in range(5):
+        attacker.post('/login', data={'username': 'admin11', 'password': 'wrong-password'},
+                      environ_base={'REMOTE_ADDR': '10.0.0.66'})
+    blocked = attacker.post('/login', data={'username': 'admin11', 'password': 'examplePassword123!'},
+                            environ_base={'REMOTE_ADDR': '10.0.0.66'})
+    assert blocked.status_code == 429
+
+    owner = app.test_client()
+    allowed = owner.post('/login', data={'username': 'admin11', 'password': 'examplePassword123!'},
+                         environ_base={'REMOTE_ADDR': '10.0.0.7'})
+    assert allowed.status_code == 302
+
+
+def test_two_admins_demoting_each_other_keep_one_admin(app):
+    import threading
+    from werkzeug.security import generate_password_hash
+    with app.app_context():
+        db = get_db()
+        db.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'admin')",
+                   ('admin22', generate_password_hash('examplePassword123!', method='scrypt')))
+        db.execute("UPDATE users SET role = 'employee' WHERE username = 'admin11'")
+        db.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'admin')",
+                   ('admin33', generate_password_hash('examplePassword123!', method='scrypt')))
+        db.commit()
+        ids = dict(db.execute("SELECT username, id FROM users"))
+
+    for _ in range(5):
+        first, second = app.test_client(), app.test_client()
+        login(first, 'admin22')
+        login(second, 'admin33')
+        gate = threading.Barrier(2)
+
+        def demote(client, target):
+            gate.wait()
+            client.post(f'/admin/users/{target}/role', data={'role': 'guest'})
+
+        threads = [threading.Thread(target=demote, args=(first, ids['admin33'])),
+                   threading.Thread(target=demote, args=(second, ids['admin22']))]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        with app.app_context():
+            db = get_db()
+            assert db.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'").fetchone()[0] == 1
+            db.execute("UPDATE users SET role = 'admin' WHERE username IN ('admin22', 'admin33')")
+            db.commit()
+
+
+def test_event_history_and_audit_trail_are_append_only(client, app):
+    import sqlite3
+    import pytest
+    login(client)
+    assert movement(client, 'gallery_enter').status_code == 302
+    with app.app_context():
+        db = get_db()
+        for statement in ('UPDATE gallery_events SET person_id = 2',
+                          'DELETE FROM gallery_events',
+                          "UPDATE audit_logs SET outcome = 'accepted'",
+                          'DELETE FROM audit_logs'):
+            with pytest.raises(sqlite3.DatabaseError, match='append-only'):
+                db.execute(statement)
+            db.rollback()

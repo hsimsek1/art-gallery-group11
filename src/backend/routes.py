@@ -1,4 +1,3 @@
-"""Server-rendered gallery UI. All protected state changes are POST + CSRF."""
 import re
 import sqlite3
 from functools import wraps
@@ -14,6 +13,8 @@ web = Blueprint('web', __name__)
 ROLES = ('guest', 'employee', 'admin')
 EVENT_TYPES = ('gallery_enter', 'room_enter', 'room_leave', 'gallery_leave')
 PAGE_MAX = 25
+
+DUMMY_PASSWORD_HASH = generate_password_hash('not-a-real-account-password', method='scrypt')
 
 
 def role_required(*roles):
@@ -81,16 +82,18 @@ def login():
         audit('LOGIN_FAILED', target='invalid-input', outcome='rejected')
         return render_template('login.html', error='Enter a valid username and password.'), 400
     username_failures = db.execute(
-        "SELECT COUNT(*) FROM login_failures WHERE username = ? "
+        "SELECT COUNT(*) FROM login_failures WHERE username = ? AND ip = ? "
         "AND attempted_at > datetime('now', '-15 minutes')",
-        (username,),
+        (username, ip),
     ).fetchone()[0]
     if username_failures >= 5:
         audit('LOGIN_RATE_LIMITED', target=username, outcome='rejected')
         return render_template('login.html', error='Too many login attempts. Try again later.'), 429
 
     row = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
-    if row is None or not check_password_hash(row['password_hash'], password):
+    stored_hash = row['password_hash'] if row is not None else DUMMY_PASSWORD_HASH
+    password_ok = check_password_hash(stored_hash, password)
+    if row is None or not password_ok:
         db.execute('INSERT INTO login_failures (username, ip) VALUES (?, ?)', (username, ip))
         db.commit()
         audit('LOGIN_FAILED', row['id'] if row else None, target=username, outcome='rejected')
@@ -108,7 +111,11 @@ def login():
 @web.post('/logout')
 @login_required
 def logout():
-    audit('LOGOUT', current_user.id)
+    db = get_db()
+    db.execute('UPDATE users SET session_version = session_version + 1 WHERE id = ?',
+               (current_user.id,))
+    audit('LOGOUT', current_user.id, commit=False)
+    db.commit()
     logout_user()
     session.clear()
     return redirect(url_for('web.login'))
@@ -322,14 +329,22 @@ def change_role(user_id):
     if user_id == current_user.id:
         abort(403)  
     db = get_db()
+    db.execute('BEGIN IMMEDIATE')
+    actor = db.execute('SELECT role FROM users WHERE id = ?', (current_user.id,)).fetchone()
+    if actor is None or actor['role'] != 'admin':
+        db.rollback()
+        abort(403)
     target = db.execute('SELECT id, role FROM users WHERE id = ?', (user_id,)).fetchone()
     if target is None:
+        db.rollback()
         abort(404)
     if target['role'] == 'admin' and role != 'admin':
         count = db.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'").fetchone()[0]
         if count <= 1:
+            db.rollback()
             abort(409)
-    db.execute('UPDATE users SET role = ? WHERE id = ?', (role, user_id))
+    db.execute('UPDATE users SET role = ?, session_version = session_version + 1 WHERE id = ?',
+               (role, user_id))
     audit('ADMIN_ROLE_CHANGE', current_user.id, target=f'user:{user_id};role:{role}', commit=False)
     db.commit()
     return redirect(url_for('web.admin'))
